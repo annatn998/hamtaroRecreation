@@ -1,0 +1,153 @@
+import pygame
+pygame.init()
+screenWidth = 400
+screenHeight = 400
+win = pygame.display.set_mode((screenWidth,screenHeight))
+
+pygame.display.set_caption("Hamster School")
+bg = pygame.image.load('HamHamHouse.png')
+char = pygame.image.load('ham1.png')
+
+clock = pygame.time.Clock()
+walkRight = [pygame.image.load('HamR1.png'), pygame.image.load('HamR2.png'), pygame.image.load('HamR3.png'), pygame.image.load('HamR4.png')]
+#to load a file from a different directory --> pygame.path.join('data','R1') --> that would join them
+# #hypothetically could just flip the images to make it move left or right so you only have one set
+walkLeft = [pygame.image.load('HamL1.png'), pygame.image.load('HamL2.png'), pygame.image.load('HamL3.png'), pygame.image.load('HamL4.png')]
+
+
+def redrawGameWindow():
+    global bg
+    win.blit(bg, (0, 0))
+    hamtaro.draw(win)
+    pygame.display.update()
+
+def changingBG():
+    global screenHeight
+    global screenWidth
+    global bg
+    bg = pygame.image.load('cameraRoom.png')
+    screenWidth = 450
+    screenHeight = 300
+
+def homeBG():
+    global bg
+    bg = pygame.image.load('HamHamHouse.png')
+
+
+
+
+
+
+
+class player(object):
+    def __init__(self,x,y,width,height):
+        self.x = x
+        self.y = y
+        self.width = width
+        self.height = height
+        self.vel = 2
+        self.left = False
+        self.right = False
+        self.walkCount = 0
+        self.jumpCount = 10
+        self.isStanding = True
+        self.isJump = False
+        self.up = False
+        self.down = False
+        self.cameraRoom = False
+
+    def draw(self, win):
+        if self.walkCount >= 9:
+            self.walkCount = 0
+        if self.isStanding == False:
+            if self.left == True:
+                win.blit(walkLeft[self.walkCount//3], (self.x,self.y))
+                self.walkCount += 1
+            elif self.right == True:
+                win.blit(walkRight[self.walkCount//3], (self.x,self.y))
+                self.walkCount += 1
+            elif self.up:
+                win.blit(char, (self.x,self.y))
+            elif self.down:
+                win.blit(char, (self.x, self.y))
+            elif self.isJump:
+                if self.right == True:
+                    win.blit(walkRight[0], (self.x, self.y))
+                else:
+                    win.blit(walkLeft[0], (self.x, self.y))
+        elif self.isStanding == True: # eliminate this to get the ghost effect
+                if self.right == True:
+                    win.blit(walkRight[0], (self.x, self.y))
+                else:
+                    win.blit(walkLeft[0], (self.x, self.y))
+
+
+
+
+hamtaro = player(200, 200, 64, 64)
+run = True
+
+while run:
+    clock.tick(27)
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            run = False
+
+    keys = pygame.key.get_pressed()
+    if keys[pygame.K_RIGHT] and hamtaro.x < 400 - hamtaro.width - hamtaro.vel:
+        hamtaro.right = True
+        hamtaro.left = False
+        hamtaro.isStanding = False
+        hamtaro.x += hamtaro.vel
+    elif keys[pygame.K_LEFT] and hamtaro.x > hamtaro.vel:
+        hamtaro.left = True
+        hamtaro.right = False
+        hamtaro.isStanding = False
+        hamtaro.x -= hamtaro.vel
+    elif keys[pygame.K_UP] and hamtaro.y > hamtaro.vel:
+        hamtaro.right = False
+        hamtaro.left = False
+        hamtaro.isStanding = False
+        hamtaro.up = True
+        hamtaro.y -= hamtaro.vel
+    elif keys[pygame.K_DOWN] and hamtaro.y < 400 - hamtaro.height - hamtaro.vel:
+        hamtaro.right = False
+        hamtaro.left = False
+        hamtaro.isStanding = False
+        hamtaro.down = True
+        hamtaro.y += hamtaro.vel
+    else:
+        hamtaro.isStanding = True
+        hamtaro.walkCount = 0
+
+    if hamtaro.isJump == False:
+        if keys[pygame.K_SPACE]:
+            hamtaro.walkCount = 0
+            hamtaro.isJump = True
+            hamtaro.isStanding = False
+    else:
+        if hamtaro.jumpCount >= -10:
+            neg = 1
+            if hamtaro.jumpCount < 0:
+                neg = -1
+            hamtaro.y -= (hamtaro.jumpCount**2) * 0.1 * neg
+            hamtaro.jumpCount -= 1
+        else:
+            hamtaro.isJump = False
+            hamtaro.jumpCount = 10
+            hamtaro.isStanding = True
+
+    if not hamtaro.cameraRoom:
+        if hamtaro.x < hamtaro.vel + 1 and hamtaro.y < 400 - hamtaro.vel +1:
+            hamtaro.cameraRoom = True
+            changingBG()
+    elif hamtaro.x > 400 - hamtaro.vel and hamtaro.y > 400 - hamtaro.vel:
+        homeBG()
+
+
+    redrawGameWindow()
+
+
+
+
+pygame.quit()
