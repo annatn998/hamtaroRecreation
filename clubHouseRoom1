@@ -1,42 +1,36 @@
 import pygame
+import time
 pygame.init()
-screenWidth = 400
-screenHeight = 400
+screenWidth = 500
+screenHeight = 500
 win = pygame.display.set_mode((screenWidth,screenHeight))
 
-pygame.display.set_caption("Hamster School")
+pygame.display.set_caption("Hamtaro Sniffer!")
 bg = pygame.image.load('HamHamHouse.png')
 char = pygame.image.load('ham1.png')
 
+def walkingDirections (name,num):
+    list = []
+    for x in range(1,num):
+        image = pygame.image.load(name + str(x) + '.png')
+        list.append(image)
+    return(list)
+
 clock = pygame.time.Clock()
-walkRight = [pygame.image.load('HamR1.png'), pygame.image.load('HamR2.png'), pygame.image.load('HamR3.png'), pygame.image.load('HamR4.png')]
-#to load a file from a different directory --> pygame.path.join('data','R1') --> that would join them
-# #hypothetically could just flip the images to make it move left or right so you only have one set
-walkLeft = [pygame.image.load('HamL1.png'), pygame.image.load('HamL2.png'), pygame.image.load('HamL3.png'), pygame.image.load('HamL4.png')]
+walkLeft = walkingDirections('HamL',5)
+walkRight = walkingDirections('HamR',5)
+walkDown = walkingDirections('HamU',5)
+walkUp = walkingDirections('HamD',5)
+sniff = walkingDirections('HamSniff',5)
+cheer = walkingDirections('HamCheer',7)
+
+
 
 
 def redrawGameWindow():
-    global bg
     win.blit(bg, (0, 0))
     hamtaro.draw(win)
     pygame.display.update()
-
-def changingBG():
-    global screenHeight
-    global screenWidth
-    global bg
-    bg = pygame.image.load('cameraRoom.png')
-    screenWidth = 450
-    screenHeight = 300
-
-def homeBG():
-    global bg
-    bg = pygame.image.load('HamHamHouse.png')
-
-
-
-
-
 
 
 class player(object):
@@ -45,7 +39,7 @@ class player(object):
         self.y = y
         self.width = width
         self.height = height
-        self.vel = 2
+        self.vel = 4
         self.left = False
         self.right = False
         self.walkCount = 0
@@ -55,6 +49,9 @@ class player(object):
         self.up = False
         self.down = False
         self.cameraRoom = False
+        self.sniff = False
+        self.prize = False
+
 
     def draw(self, win):
         if self.walkCount >= 9:
@@ -66,10 +63,12 @@ class player(object):
             elif self.right == True:
                 win.blit(walkRight[self.walkCount//3], (self.x,self.y))
                 self.walkCount += 1
-            elif self.up:
-                win.blit(char, (self.x,self.y))
-            elif self.down:
-                win.blit(char, (self.x, self.y))
+            elif self.up == True:
+                win.blit(walkUp[self.walkCount//3], (self.x,self.y))
+                self.walkCount += 1
+            elif self.down == True:
+                win.blit(walkDown[self.walkCount//3], (self.x, self.y))
+                self.walkCount += 1
             elif self.isJump:
                 if self.right == True:
                     win.blit(walkRight[0], (self.x, self.y))
@@ -78,46 +77,72 @@ class player(object):
         elif self.isStanding == True: # eliminate this to get the ghost effect
                 if self.right == True:
                     win.blit(walkRight[0], (self.x, self.y))
-                else:
+                elif self.left == True:
                     win.blit(walkLeft[0], (self.x, self.y))
-
-
+                else:
+                    win.blit(char,(self.x,self.y))
+        if self.sniff == True and self.prize == False :
+            win.blit(sniff[self.walkCount//3], (self.x, self.y))
+            self.walkCount += 1
+        elif self.sniff == True and self.prize == True:
+            win.blit(cheer[self.walkCount // 3], (self.x, self.y))
+            self.walkCount += 1
 
 
 hamtaro = player(200, 200, 64, 64)
 run = True
 
 while run:
+    prizesY = 329 <= hamtaro.y <= 340
+    prizesX = 200 <= hamtaro.x <=250
     clock.tick(27)
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             run = False
+        if event.type == pygame.MOUSEBUTTONDOWN:
+            pos = pygame.mouse.get_pos()
+            print(pos)
 
     keys = pygame.key.get_pressed()
-    if keys[pygame.K_RIGHT] and hamtaro.x < 400 - hamtaro.width - hamtaro.vel:
+    if keys[pygame.K_RIGHT] and hamtaro.x < screenWidth - hamtaro.width - hamtaro.vel:
         hamtaro.right = True
         hamtaro.left = False
         hamtaro.isStanding = False
+        hamtaro.sniff = False
         hamtaro.x += hamtaro.vel
     elif keys[pygame.K_LEFT] and hamtaro.x > hamtaro.vel:
         hamtaro.left = True
         hamtaro.right = False
         hamtaro.isStanding = False
+        hamtaro.sniff = False
         hamtaro.x -= hamtaro.vel
     elif keys[pygame.K_UP] and hamtaro.y > hamtaro.vel:
         hamtaro.right = False
         hamtaro.left = False
         hamtaro.isStanding = False
+        hamtaro.down = False
         hamtaro.up = True
         hamtaro.y -= hamtaro.vel
-    elif keys[pygame.K_DOWN] and hamtaro.y < 400 - hamtaro.height - hamtaro.vel:
+    elif keys[pygame.K_DOWN] and hamtaro.y < screenHeight - hamtaro.height - hamtaro.vel:
         hamtaro.right = False
         hamtaro.left = False
         hamtaro.isStanding = False
         hamtaro.down = True
+        hamtaro.up = False
         hamtaro.y += hamtaro.vel
+    elif keys[pygame.K_s]:
+        hamtaro.sniff = True
+        hamtaro.isStanding = False
+        hamtaro.isJump = False
+        hamtaro.right = False
+        hamtaro.left = False
+        hamtaro.up = False
+        hamtaro.down = False
+        print(prizesX)
+        print(prizesY)
     else:
         hamtaro.isStanding = True
+        hamtaro.sniff = False
         hamtaro.walkCount = 0
 
     if hamtaro.isJump == False:
@@ -137,16 +162,10 @@ while run:
             hamtaro.jumpCount = 10
             hamtaro.isStanding = True
 
-    if not hamtaro.cameraRoom:
-        if hamtaro.x < hamtaro.vel + 1 and hamtaro.y < 400 - hamtaro.vel +1:
-            hamtaro.cameraRoom = True
-            changingBG()
-    elif hamtaro.x > 400 - hamtaro.vel and hamtaro.y > 400 - hamtaro.vel:
-        homeBG()
-
+    if prizesX == True and prizesY == True:
+        hamtaro.prize = True
 
     redrawGameWindow()
-
 
 
 
