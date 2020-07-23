@@ -8,6 +8,7 @@ win = pygame.display.set_mode((screenWidth,screenHeight))
 pygame.display.set_caption("Hamtaro Sniffer!")
 bg = pygame.image.load('HamHamHouse.png')
 char = pygame.image.load('ham1.png')
+snoozer = pygame.image.load('snoozer.png')
 
 def walkingDirections (name,num):
     list = []
@@ -26,10 +27,10 @@ cheer = walkingDirections('HamCheer',7)
 
 
 
-
 def redrawGameWindow():
     win.blit(bg, (0, 0))
     hamtaro.draw(win)
+    win.blit(snoozer,(170,270))
     pygame.display.update()
 
 
@@ -95,6 +96,8 @@ run = True
 while run:
     prizesY = 329 <= hamtaro.y <= 340
     prizesX = 200 <= hamtaro.x <=250
+    tableX = 130 <= hamtaro.x <= 280
+    tableY = 250 <= hamtaro.y <= 360
     clock.tick(27)
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
